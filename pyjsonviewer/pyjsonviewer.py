@@ -1,9 +1,6 @@
 """
-
 A JSON viewer using pure python
-
 author: Atsushi Sakai (@Atsushi_twi)
-
 """
 
 import tkinter as tk
@@ -23,11 +20,14 @@ MAX_HISTORY = 10
 
 class JSONTreeFrame(ttk.Frame):
 
-    def __init__(self, master, jsonpath=None, initialdir="~/"):
+    def __init__(self, master, jsonpath=None, initialdir="~/", purejson=None):
         super().__init__(master)
         self.create_widgets()
         self.initialdir = initialdir
+        self.purejson = purejson
 
+        if purejson:
+            self.importjson(None)
         if jsonpath:
             self.importjson(jsonpath)
 
@@ -45,14 +45,17 @@ class JSONTreeFrame(ttk.Frame):
 
     def insert_node(self, parent, key, value):
         node = self.tree.insert(parent, 'end', text=key, open=False)
-
         if value is None:
             return
 
         if type(value) is not dict:
             if type(value) is list:
-                value = value[0:MAX_N_SHOW_ITEM]
-            node = self.tree.insert(node, 'end', text=value, open=False)
+                for n, i in enumerate(value):
+                    self.insert_node(node, '#' + str(n), i)
+                # node = self.tree.insert(node, 'end', text="", open=False)
+            else:
+                value = str(value)[0:MAX_N_SHOW_ITEM]
+                node = self.tree.insert(node, 'end', text=value, open=False)
         else:
             for (key, value) in value.items():
                 self.insert_node(node, key, value)
@@ -101,12 +104,14 @@ class JSONTreeFrame(ttk.Frame):
                 f.write(line.replace("\n", "") + "\n")
 
     def load_json_data(self, file_path):
+        if self.purejson is not None:
+            return self.purejson
         with open(file_path) as f:
             return json.load(f)
 
     def importjson(self, file_path):
         data = self.load_json_data(file_path)
-        self.save_json_history(file_path)
+        # self.save_json_history(file_path)
         self.delete_all_nodes()
         self.insert_nodes(data)
 
@@ -149,29 +154,23 @@ class Listbox(tk.Listbox):
             self.config(width=width + w)
 
 
-def main():
-    print(__file__ + " start!!")
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--file', type=str, help='JSON file path')
-    parser.add_argument('-d', '--dir', type=str,
-                        help='JSON file directory')
-    parser.add_argument('-o', '--open', action='store_true',
-                        default=False, help='Open with finder')
-    args = parser.parse_args()
-
+def jsonViewer(jsondict=None):
+    if isinstance(jsondict, str):
+        jsondict = json.loads(jsondict)
+    open_ = False if isinstance(jsondict, dict) else True
     root = tk.Tk()
     root.title('PyJSONViewer')
     root.geometry("500x500")
     menubar = tk.Menu(root)
 
-    if args.open:
-        args.file = filedialog.askopenfilename(
-            initialdir=args.dir,
+    if open_:
+        file = filedialog.askopenfilename(
+            initialdir='.',
             filetypes=[("JSON files", "*.json")])
+    else:
+        file = '~/tmp.json'
 
-    app = JSONTreeFrame(root, jsonpath=args.file, initialdir=args.dir)
-
+    app = JSONTreeFrame(root, jsonpath=file, purejson=jsondict)
     filemenu = tk.Menu(menubar, tearoff=0)
     filemenu.add_command(label="Open", command=app.select_json_file)
     filemenu.add_command(label="Open from History",
@@ -189,4 +188,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    jsonViewer()
