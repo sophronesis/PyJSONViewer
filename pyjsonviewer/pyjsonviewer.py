@@ -188,4 +188,5 @@ def jsonViewer(jsondict=None):
 
 
 if __name__ == '__main__':
-    jsonViewer()
+    jsonViewer({"key": "value", "array": [1, "22", 33], "nested_dict": {"more_keys": "values"}})
+
