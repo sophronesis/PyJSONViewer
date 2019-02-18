@@ -48,6 +48,15 @@ or download as zip.
 
 # How to use
 
+## View python dictionary
+
+```
+from PyJSONViewer import jsonViewer
+jsonViewer({"key": "value", "array": [1, "22", 33], "nested_dict": {"more_keys": "values"}})
+```
+
+![img1](https://github.com/hardkun/PyJSONViewer/raw/master/img/dict.png)
+
 ## Bash alias setting
 
 If you add this alias settting in your .bashrc
